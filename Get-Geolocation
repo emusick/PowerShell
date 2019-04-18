@@ -1,0 +1,12 @@
+# Add header
+echo "IP,Country,ASN" >> .\geoip.csv
+
+# Read list of IP addresses and query against ipinfo.io for geolocation data
+ForEach ($ip in Get-Content .\geoip.txt) {
+    # Convers from JSON and then converts to CSV.
+    # Removes header lines added by ipinfo.
+    # Prevents empty lines from being written by Select-String.
+    # Removes unneccessary data to only keep IP, Country, ASN
+    Invoke-WebRequest -Uri ipinfo.io/$ip | ConvertFrom-Json | ConvertTo-Csv -NoTypeInformation | Select-String -Pattern '"ip",' -NotMatch | %{$_.Line -replace '^"(.*?)",".*"([A-Z]{2})".*"(AS.*?) .*"','$1,$2,$3'} >> .\geoip.csv
+    Start-Sleep -Seconds 2
+}
